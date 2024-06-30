@@ -1,20 +1,4 @@
-# 📊 Data evaluation template
+# Auction Simulation App for Regret-Minimizing Agents 
 
-A simple Streamlit app showing how to evaluate and annotate data, using dataframes
-and charts. 
+Adapted from the [Auctions Between Regret-Minimizing Agents](https://arxiv.org/abs/2110.11855) paper by Yoav Kolombus and Noam Nisan.
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://data-evaluation-template.streamlit.app/)
-
-### How to run it on your own machine
-
-1. Install the requirements
-
-   ```
-   $ pip install -r requirements.txt
-   ```
-
-2. Run the app
-
-   ```
-   $ streamlit run streamlit_app.py
-   ```
