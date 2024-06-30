@@ -144,8 +144,8 @@ alpha = st.number_input("Reserve Price", 0.0, 1.0, 0.20, 0.01)
 # Add button to start the simulation
 if st.button("Start Simulation"):
     # agents = [Agent(np.random.rand()) for _ in range(num_agents)]
-    if k >= num_agents:
-        st.error("Number of items must be less than the number of agents. Please adjust the number of items.")
+    if any(v < alpha for v in vals):
+        st.write("Values of agents must be greater than or equal to the reserve price.")
     else:
 
         agents = []
