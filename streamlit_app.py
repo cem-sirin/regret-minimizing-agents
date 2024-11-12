@@ -1,4 +1,5 @@
 import streamlit as st
+import random
 
 from typing import List
 from agents import Auction
@@ -37,7 +38,7 @@ st.write(
 t = c1[0].selectbox("Auction Type", ["First Price Auction", "Second Price Auction"])
 α = c1[1].number_input("Reserve Price (α)", 0.0, 1.0, 0.10, 0.01)
 
-eps = c1[2].number_input("Granularity of bids ($$\epsilon$$)", -10, -1, -2, 1)
+eps = c1[2].number_input("Granularity of bids ($$\epsilon$$)", -10, -1, -3, 1)
 eps = 10 ** (eps)
 eta = c1[2].number_input("Learning Rate ($$\eta$$)", -10, -1, -2, 1)
 eta = 10 ** (eta)
@@ -54,7 +55,7 @@ agent_columns = st.columns(num_agents)
 vals = []
 for i in range(num_agents):
     agent_columns[i].write(f"Agent {i+1}")
-    vals.append(agent_columns[i].slider(f"$$v_{i+1}$$", α, 1.0, 0.5))
+    vals.append(agent_columns[i].slider(f"$$v_{i+1}$$", α, 1.0, random.uniform(0.1, 1.0)))
 
 # Add button to adjust number of items
 k = c1[1].number_input("Number of Items ($$k$$)", 1, num_agents - 1, 1)
