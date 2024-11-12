@@ -1,7 +1,5 @@
 import numpy as np
 from typing import List, Union, Optional
-from enum import Enum
-from scipy.sparse import csr_matrix
 
 """
 Notation:
