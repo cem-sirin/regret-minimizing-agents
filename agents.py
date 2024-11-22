@@ -36,6 +36,7 @@ class BaseAgent:
         self,
         v: Union[float, List[float]],
         k: int = 1,
+        tau: float = 1.0,
         eps: float = 1e-2,
         eta: float = 1e-2,
         type: str = "spa",
@@ -64,6 +65,7 @@ class BaseAgent:
         # Bidding agent configuration
         self.v = v
         self.k = k
+        self.tau = tau
         self.eps = eps
         self.eta = eta
         self.alpha = alpha
@@ -74,7 +76,7 @@ class BaseAgent:
         # N: number of actions (i.e., number of bid prices)
         # bids: corresponding bids for each action
         # weights: weights of each action
-        self.bids = np.arange(alpha, v.max() + eps, eps, dtype=np.float32)
+        self.bids = np.arange(alpha, v.max() * tau + eps, eps, dtype=np.float32)
         self.bids = self.bids.round(int(np.log10(1 / eps)))
         self.N = len(self.bids)
         self.weights = np.ones(self.N) / self.N
@@ -93,6 +95,7 @@ class BiddingAgent(BaseAgent):
         self,
         v: Union[float, List[float]],
         k: int = 1,
+        tau: float = 1.0,
         lam: float = 1,
         eps: float = 1e-3,
         eta: float = 1e-1,
@@ -105,6 +108,7 @@ class BiddingAgent(BaseAgent):
         Args:
             v: value that the agent has for the item.
             k: number of items in the auction.
+            tau: overbidding factor.
             lam: hybrid objective function parameter.
             eps: granularity of the bids.
             eta: learning rate of the MW algorithm.
@@ -112,7 +116,7 @@ class BiddingAgent(BaseAgent):
             alpha: reserve price of the auction.
             single_value: whether the agent has a single value for multiple-item auctions.
         """
-        super().__init__(v, k, eps, eta, type, alpha, single_value)
+        super().__init__(v, k, tau, eps, eta, type, alpha, single_value)
         self.lam = lam
 
     def allocate(self, oponent_bids: np.ndarray) -> np.ndarray:
@@ -292,7 +296,9 @@ if __name__ == "__main__":
 
     np.set_printoptions(precision=1)
 
-    auction = Auction(type="spa", n=3, v_list=[0.5, 0.6, 0.7, 1.0], k=2, alpha=0.1, agent_args={"eps": 1e-3})
+    auction = Auction(
+        type="spa", n=3, v_list=[0.5, 0.6, 0.7, 1.0], k=2, alpha=0.1, agent_args={"eps": 1e-3, "tau": 2.0}
+    )
     history = auction.simulate(T=1001)
 
     df = pd.DataFrame(history)

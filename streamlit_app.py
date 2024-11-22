@@ -1,14 +1,12 @@
 import streamlit as st
-import random
 
-from typing import List
 from agents import Auction
 from plot import plot_bids, plot_weights
 
 
 TYPE_MAP = {"First Price Auction": "fpa", "Second Price Auction": "spa"}
 
-# Title and Header
+# 1. Introduction
 st.title("Regret Minimizing Agents")
 
 st.write(
@@ -16,26 +14,36 @@ st.write(
     "implementation of the paper: https://arxiv.org/abs/2110.11855. An agent updates its weight by"
 )
 
-st.latex("w_{i,t+1} = w_{i,t} (1 + \eta u_{i,t})")
-
+ltx = """
+\\begin{align}
+w_{i,t+1} &= w_{i,t} (1 + \eta \cdot u_{i,t}) \\\\
+u_{i,t} &= v(x_{i,t}) - \\lambda \cdot p(x_{i,t}) \\\\
+\\end{align}
+"""
+st.latex(ltx)
 st.write(
-    "where $w_{i,t}$ is the weight corresponding to bid slot $i$ at time $t$. The utility of an agent" + " is given by"
+    """
+where:
+- $w_{i,t}$ is the weight,
+- $u_{i,t}$ is the utility,
+- $x_{i,t}$ is the allocation of bid slot $i$ at time $t$,
+- $v$ and $p$ are the value and payment functions respectively.
+"""
 )
-st.latex("u_{i,t} = v_{i,t} - \\lambda p_{i,t}")
 
-st.write("where $v_i$ is the value and $p_i$ is the payment occured at time $t$ if the agent had bid slot $i$.")
 
+# 2. Setting up the simulation
 st.header("Configuration")
 
-# Create 2 columns
+# Column 1
 c1 = st.columns(3)
 
-# Configuration
-st.write(
-    "Note: $$\epsilon$$ and $$\eta$$ parameters are readjusted. Say, if you input 2 for $$\epsilon$$, then the epsilon will be $$10^{-2}$$."
-)
+note = "Note: The input value of $$\epsilon$$ and $$\eta$$ parameters are the powers of 10. For example, if you want to set $$\epsilon = 10^{-2}$$, your input should be -2."
+st.info(note)
+
 λ = c1[0].number_input("Hybrid objective parameter ($$\lambda$$)", 0.0, 1.0, 1.0, 0.1)
-t = c1[0].selectbox("Auction Type", ["First Price Auction", "Second Price Auction"])
+# t = c1[0].selectbox("Auction Type", ["Second Price Auction", "First Price Auction"])
+tau = c1[0].number_input("Overbidding factor ($$\\tau$$)", 0.0, 2.0, 1.0, 0.1)
 α = c1[1].number_input("Reserve Price (α)", 0.0, 1.0, 0.10, 0.01)
 
 eps = c1[2].number_input("Granularity of bids ($$\epsilon$$)", -10, -1, -3, 1)
@@ -46,7 +54,8 @@ eta = 10 ** (eta)
 k = 1
 
 c2 = st.columns(2)
-T = c2[0].slider("Number of Rounds", 1, 5000, 500)
+# T = c2[0].slider("Number of Rounds", 1, 5000, 500)
+auction_type = c2[0].selectbox("Auction Type", ["Second Price Auction", "First Price Auction"])
 
 # Create a card for each agent
 num_agents = c2[1].slider("Number of Agents", k + 1, 5, 3)
@@ -55,23 +64,22 @@ agent_columns = st.columns(num_agents)
 vals = []
 for i in range(num_agents):
     agent_columns[i].write(f"Agent {i+1}")
-    vals.append(agent_columns[i].slider(f"$$v_{i+1}$$", α, 1.0, random.uniform(0.1, 1.0)))
+    vals.append(agent_columns[i].slider(f"$$v_{i+1}$$", α, 1.0, 0.5))
 
 # Add button to adjust number of items
 k = c1[1].number_input("Number of Items ($$k$$)", 1, num_agents - 1, 1)
 
-# Create a toggle for advanced configuration where the user can adjust the reserve price, eps etc.
-c3 = st.columns(2)
+T = st.slider("Number of Rounds", 1, 5000, 500)
 
+agent_args = {"lam": λ, "eps": eps, "eta": eta, "tau": tau}
 
-agent_args = {"lam": λ, "eps": eps, "eta": eta}
 # Add button to start the simulation
 if st.button("Start Simulation"):
     if any(v < α for v in vals):
         st.write("Values of agents must be greater than or equal to the reserve price.")
     else:
 
-        auction = Auction(type=TYPE_MAP[t], n=num_agents, v_list=vals, k=k, alpha=α, agent_args=agent_args)
+        auction = Auction(type=TYPE_MAP[auction_type], n=num_agents, v_list=vals, k=k, alpha=α, agent_args=agent_args)
 
         history = auction.simulate(T=T)
         ts_chart = plot_bids(history, auction)

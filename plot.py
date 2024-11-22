@@ -32,7 +32,10 @@ def plot_bids(history, auction):
 
 def plot_weights(auction):
     eps = auction.bidders[0].eps
-    index = np.arange(0, 1 + eps, eps)
+
+    # We need to first find the maximum bid value
+    max_bid = max(a.bids[-1] for a in auction.bidders)
+    index = np.arange(0, max_bid + eps, eps)
     index = (index / eps).round().astype(int)
 
     df = pd.DataFrame(index=index)
@@ -45,7 +48,14 @@ def plot_weights(auction):
     df = df.reset_index()
     df = df.melt(id_vars="index", var_name="Agent", value_name="Weight")
     chart = (
-        alt.Chart(df).mark_bar().encode(x="index:Q", y="Weight:Q", color="Agent:N").properties(title="Agent Weights")
+        alt.Chart(df)
+        .mark_bar()
+        .encode(
+            x="index:Q",
+            y="Weight:Q",
+            color="Agent:N",
+        )
+        .properties(title="Agent Weights")
     )
     return chart
 
