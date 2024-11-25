@@ -39,7 +39,7 @@ class BaseAgent:
         tau: float = 1.0,
         eps: float = 1e-2,
         eta: float = 1e-2,
-        type: str = "spa",
+        auction_type: str = "spa",
         alpha: float = 0,
         single_value: bool = True,
     ):
@@ -60,7 +60,7 @@ class BaseAgent:
 
         # Validation
         assert np.all(v[:-1] <= v[1:]), f"Input values must be ascending. v={v}"
-        assert type in ["fpa", "spa"], "Type must be either 'fpa' or 'spa'."
+        assert auction_type in ["fpa", "spa"], "Type must be either 'fpa' or 'spa'."
 
         # Bidding agent configuration
         self.v = v
@@ -69,9 +69,9 @@ class BaseAgent:
         self.eps = eps
         self.eta = eta
         self.alpha = alpha
-        self.type = type
+        self.auction_type = auction_type
         self.single_value = single_value
-        self.payments = getattr(self, type)
+        self.payments = getattr(self, auction_type)
 
         # N: number of actions (i.e., number of bid prices)
         # bids: corresponding bids for each action
@@ -99,7 +99,7 @@ class BiddingAgent(BaseAgent):
         lam: float = 1,
         eps: float = 1e-3,
         eta: float = 1e-1,
-        type: str = "spa",
+        auction_type: str = "spa",
         alpha: float = 0,
         single_value: bool = True,
     ):
@@ -112,11 +112,11 @@ class BiddingAgent(BaseAgent):
             lam: hybrid objective function parameter.
             eps: granularity of the bids.
             eta: learning rate of the MW algorithm.
-            type: type of the auction. Either "fpa" or "spa", i.e., first and second price auction.
+            auction_type: type of the auction. Either "fpa" or "spa", i.e., first and second price auction.
             alpha: reserve price of the auction.
             single_value: whether the agent has a single value for multiple-item auctions.
         """
-        super().__init__(v, k, tau, eps, eta, type, alpha, single_value)
+        super().__init__(v, k, tau, eps, eta, auction_type, alpha, single_value)
         self.lam = lam
 
     def allocate(self, oponent_bids: np.ndarray) -> np.ndarray:
@@ -169,7 +169,7 @@ class BiddingAgent(BaseAgent):
         self.weights /= np.sum(self.weights)
 
     def __repr__(self) -> str:
-        return f"Agent(v={self.v}, eps={self.eps}, eta={self.eta}, type={self.type}, alpha={self.alpha})"
+        return f"Agent(v={self.v}, eps={self.eps}, eta={self.eta}, type={self.auction_type}, alpha={self.alpha})"
 
 
 class ServerAgent(BaseAgent):
@@ -179,11 +179,11 @@ class ServerAgent(BaseAgent):
         k: int = 1,
         eps: float = 1e-3,
         eta: float = 1e-1,
-        type="spa",
+        auction_type="spa",
         alpha: float = 0,
         single_value: bool = True,
     ):
-        super().__init__(v, k, eps, eta, type, alpha, single_value)
+        super().__init__(v, k, eps, eta, auction_type, alpha, single_value)
 
     def allocate(self, buyer_bids: np.ndarray) -> np.ndarray:
         """Allocation function. Returns the corresponding outcome, i.e., which item was won (or no item)"""
@@ -233,7 +233,7 @@ class ServerAgent(BaseAgent):
 class Auction:
     def __init__(
         self,
-        type: str = "spa",
+        auction_type: str = "spa",
         n: Optional[int] = None,
         v_list: Optional[List[float]] = None,
         k: int = 1,
@@ -243,15 +243,15 @@ class Auction:
     ):
         """Auction class.
         Args:
-            type: type of the auction. Either "fpa" or "spa", i.e., first and second price auction.
+            auction_type: type of the auction. Either "fpa" or "spa", i.e., first and second price auction.
             n: number of agents.
+            v_list: list of values for the agents. If not provided, the values will sampled uniformly from [0, 1].
             k: number of items in the auction.
             alpha: reserve price of the auction.
-            v_list: list of values for the agents. If not provided, the values will sampled uniformly from [0, 1].
+            agent_args: arguments for the agents.
             include_server: whether to include a server agent.
         """
-        assert type in ["fpa", "spa"], "Type must be either 'fpa' or 'spa'."
-        assert n >= 2, "Number of agents must be greater or equal to 2."
+        assert auction_type in ["fpa", "spa"], "Type must be either 'fpa' or 'spa'."
 
         assert n is not None or v_list is not None, "Either n or v_list must be provided."
 
@@ -261,13 +261,15 @@ class Auction:
             if len(v_list) != n:
                 print(f"Warning: Length of v_list ({len(v_list)}) does not match n ({n}). Setting n to {len(v_list)}.")
             n = len(v_list)
-            v_list = np.array(v_list)
+            # v_list = np.array(v_list)
 
-        self.type = type
+        assert n >= 2, "Number of agents must be greater or equal to 2."
+
+        self.auction_type = auction_type
         self.n = n
 
         self.v_list = v_list
-        self.bidders = [BiddingAgent(v, k=k, alpha=alpha, **agent_args) for v in v_list]
+        self.bidders = [BiddingAgent(v, k=k, auction_type=auction_type, alpha=alpha, **agent_args) for v in v_list]
 
     def step(self):
         """A single iteration of the auction."""
@@ -297,13 +299,20 @@ if __name__ == "__main__":
     np.set_printoptions(precision=1)
 
     auction = Auction(
-        type="spa", n=3, v_list=[0.5, 0.6, 0.7, 1.0], k=2, alpha=0.1, agent_args={"eps": 1e-3, "tau": 2.0}
+        auction_type="fpa",
+        v_list=[0.5, 0.6, 0.7, 1.0],
+        k=3,
+        alpha=0.1,
+        agent_args={"eps": 1e-3, "tau": 2.0, "eta": 1e-1},
     )
+    for i, a in enumerate(auction.bidders):
+        print(a)
+
     history = auction.simulate(T=1001)
 
     df = pd.DataFrame(history)
     df.columns = [f"Bidder {i+1} v={a.v.max()}" for i, a in enumerate(auction.bidders)]
-    print(df.head())
+    print(df.tail(12))
 
     # Plot time series of bids using Altair
     df_long = df.melt(var_name="Bidder", value_name="Bid")

@@ -4,7 +4,7 @@ from agents import Auction
 from plot import plot_bids, plot_weights
 
 
-TYPE_MAP = {"First Price Auction": "fpa", "Second Price Auction": "spa"}
+AUCTION_TYPE_MAP = {"First Price Auction": "fpa", "Second Price Auction": "spa"}
 
 # 1. Introduction
 st.title("Regret Minimizing Agents")
@@ -58,28 +58,33 @@ c2 = st.columns(2)
 auction_type = c2[0].selectbox("Auction Type", ["Second Price Auction", "First Price Auction"])
 
 # Create a card for each agent
-num_agents = c2[1].slider("Number of Agents", k + 1, 5, 3)
+num_agents = c2[1].slider("Number of Agents", k + 1, 5, 2)
 
 agent_columns = st.columns(num_agents)
-vals = []
+v_list = []
 for i in range(num_agents):
     agent_columns[i].write(f"Agent {i+1}")
-    vals.append(agent_columns[i].slider(f"$$v_{i+1}$$", α, 1.0, 0.5))
+    v_list.append(agent_columns[i].slider(f"$$v_{i+1}$$", α, 1.0, 0.5))
 
 # Add button to adjust number of items
 k = c1[1].number_input("Number of Items ($$k$$)", 1, num_agents - 1, 1)
 
 T = st.slider("Number of Rounds", 1, 5000, 500)
-
 agent_args = {"lam": λ, "eps": eps, "eta": eta, "tau": tau}
 
 # Add button to start the simulation
 if st.button("Start Simulation"):
-    if any(v < α for v in vals):
+    if any(v < α for v in v_list):
         st.write("Values of agents must be greater than or equal to the reserve price.")
     else:
-
-        auction = Auction(type=TYPE_MAP[auction_type], n=num_agents, v_list=vals, k=k, alpha=α, agent_args=agent_args)
+        auction = Auction(
+            auction_type=AUCTION_TYPE_MAP[auction_type],
+            n=num_agents,
+            v_list=v_list,
+            k=k,
+            alpha=α,
+            agent_args=agent_args,
+        )
 
         history = auction.simulate(T=T)
         ts_chart = plot_bids(history, auction)

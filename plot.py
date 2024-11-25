@@ -49,10 +49,11 @@ def plot_weights(auction):
     df = df.melt(id_vars="index", var_name="Agent", value_name="Weight")
     chart = (
         alt.Chart(df)
-        .mark_bar()
+        .mark_area(opacity=0.5)
         .encode(
             x="index:Q",
-            y="Weight:Q",
+            # y="Weight:Q",
+            y=alt.Y("Weight:Q").stack(None),
             color="Agent:N",
         )
         .properties(title="Agent Weights")
