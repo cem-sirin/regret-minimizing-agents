@@ -5,34 +5,34 @@ import pandas as pd
 
 def plot_bids(history, auction):
     df = pd.DataFrame(history)
-    df.columns = [f"Bidder {i+1} v={a.v.max()}" for i, a in enumerate(auction.bidders)]
+    df.columns = [f"Agents {i+1} v={a.v.max()}" for i, a in enumerate(auction.bidders)]
 
     # Plot time series of bids using Altair
-    # The columns should be "Bidder", "Bid", and "Round"
+    # The columns should be "Agents", "Bid", and "Round"
     df["Round"] = df.index
-    df_long = df.melt(var_name="Bidder", value_name="Bid", id_vars=["Round"])
+    df_long = df.melt(var_name="Agents", value_name="Bid", id_vars=["Round"])
 
     # Calculate EWMA
-    df_long["EWMA"] = df_long.groupby("Bidder")["Bid"].transform(lambda x: x.ewm(span=50).mean())
+    df_long["EWMA"] = df_long.groupby("Agents")["Bid"].transform(lambda x: x.ewm(span=50).mean())
 
     # Create Altair chart with smoothed line and low opacity for noisy data
     chart = alt.Chart(df_long).properties(title="Bid Simulation")
 
     # Noisy data
-    noisy_line = chart.mark_line(opacity=0.2).encode(x="Round:Q", y="Bid:Q", color="Bidder:N")
+    noisy_line = chart.mark_line(opacity=0.2).encode(x="Round:Q", y="Bid:Q", color="Agents:N")
 
     # Smoothed line
-    smoothed_line = chart.mark_line(color="black").encode(x="Round:Q", y="EWMA:Q", color="Bidder:N")
+    smoothed_line = chart.mark_line(color="black").encode(x="Round:Q", y="EWMA:Q", color="Agents:N")
 
     # Add the reserve price as a vertical line
-    df_reserve = pd.DataFrame({"alpha": [auction.alpha], "Reserve": ["Reserve Price"]})
+    df_reserve = pd.DataFrame({"alpha": [auction.alpha], "Agents": ["Reserve Price"]})
     reserve_line = (
         alt.Chart(df_reserve)
         .mark_rule(
             strokeDash=[5, 5],
             strokeWidth=2.5,
         )
-        .encode(y="alpha:Q", color="Reserve:N")
+        .encode(y="alpha:Q", color="Agents:N")
     )
 
     chart = smoothed_line + noisy_line + reserve_line
@@ -53,31 +53,31 @@ def plot_weights(auction):
     for i, a in enumerate(auction.bidders):
         x, y = a.bids, a.weights
         x = (x / eps).round().astype(int)
-        df.loc[x, f"Agent {i} v={a.v.max()}"] = y
+        df.loc[x, f"Agents {i} v={a.v.max()}"] = y
 
     df.index = (index * eps).round(3)
     df = df.reset_index()
-    df = df.melt(id_vars="index", var_name="Agent", value_name="Weight")
+    df = df.melt(id_vars="index", var_name="Agents", value_name="Weight")
     chart = (
         alt.Chart(df)
         .mark_area(opacity=0.5)
         .encode(
             x="index:Q",
             y=alt.Y("Weight:Q").stack(None),
-            color="Agent:N",
+            color="Agents:N",
         )
         .properties(title="Agent Weights")
     )
 
     # Add the reserve price as a horizontal line
-    df_reserve = pd.DataFrame({"alpha": [auction.alpha], "Reserve": ["Reserve Price"]})
+    df_reserve = pd.DataFrame({"alpha": [auction.alpha], "Agents": ["Reserve Price"]})
     reserve_line = (
         alt.Chart(df_reserve)
         .mark_rule(
             strokeDash=[5, 5],
             strokeWidth=2.5,
         )
-        .encode(x="alpha:Q", color="Reserve:N")
+        .encode(x="alpha:Q", color="Agents:N")
     )
 
     chart = chart + reserve_line
