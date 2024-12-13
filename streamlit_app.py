@@ -43,7 +43,7 @@ st.info(note)
 
 λ = c1[0].number_input("Hybrid objective parameter ($$\lambda$$)", 0.0, 1.0, 1.0, 0.1)
 # t = c1[0].selectbox("Auction Type", ["Second Price Auction", "First Price Auction"])
-tau = c1[0].number_input("Overbidding factor ($$\\tau$$)", 0.0, 2.0, 1.0, 0.1)
+tau = c1[0].number_input("Overbidding factor ($$\\tau$$)", 0.0, 2.01, 1.0, 0.1)
 α = c1[1].number_input("Reserve Price (α)", 0.0, 1.0, 0.10, 0.01)
 
 eps = c1[2].number_input("Granularity of bids ($$\epsilon$$)", -10, -1, -3, 1)
@@ -54,7 +54,6 @@ eta = 10 ** (eta)
 k = 1
 
 c2 = st.columns(2)
-# T = c2[0].slider("Number of Rounds", 1, 5000, 500)
 auction_type = c2[0].selectbox("Auction Type", ["Second Price Auction", "First Price Auction"])
 
 # Create a card for each agent
@@ -69,7 +68,7 @@ for i in range(num_agents):
 # Add button to adjust number of items
 k = c1[1].number_input("Number of Items ($$k$$)", 1, num_agents - 1, 1)
 
-T = st.slider("Number of Rounds", 1, 5000, 500)
+T = st.slider("Number of Rounds", 0, 50_000, 5_000, step=100)
 agent_args = {"lam": λ, "eps": eps, "eta": eta, "tau": tau}
 
 # Add button to start the simulation

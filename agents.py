@@ -267,6 +267,7 @@ class Auction:
 
         self.auction_type = auction_type
         self.n = n
+        self.alpha = alpha
 
         self.v_list = v_list
         self.bidders = [BiddingAgent(v, k=k, auction_type=auction_type, alpha=alpha, **agent_args) for v in v_list]
@@ -290,37 +291,3 @@ class Auction:
             history.append(bids)
 
         return history
-
-
-if __name__ == "__main__":
-    import pandas as pd
-    import altair as alt
-
-    np.set_printoptions(precision=1)
-
-    auction = Auction(
-        auction_type="fpa",
-        v_list=[0.5, 0.6, 0.7, 1.0],
-        k=3,
-        alpha=0.1,
-        agent_args={"eps": 1e-3, "tau": 2.0, "eta": 1e-1},
-    )
-    for i, a in enumerate(auction.bidders):
-        print(a)
-
-    history = auction.simulate(T=1001)
-
-    df = pd.DataFrame(history)
-    df.columns = [f"Bidder {i+1} v={a.v.max()}" for i, a in enumerate(auction.bidders)]
-    print(df.tail(12))
-
-    # Plot time series of bids using Altair
-    df_long = df.melt(var_name="Bidder", value_name="Bid")
-    df_long["Round"] = df_long.index
-    chart = (
-        alt.Chart(df_long)
-        .mark_line()
-        .encode(x="Round:Q", y="Bid:Q", color="Bidder:N")
-        .properties(title="Bid Simulation")
-    )
-    chart.show()

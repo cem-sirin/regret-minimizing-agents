@@ -1,0 +1,8 @@
+# Python
+__pycache__/
+
+# Notebooks
+*.ipynb
+
+# MacOs
+.DS_Store

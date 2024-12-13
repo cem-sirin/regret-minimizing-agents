@@ -1,6 +1,6 @@
-import pandas as pd
 import altair as alt
 import numpy as np
+import pandas as pd
 
 
 def plot_bids(history, auction):
@@ -24,9 +24,20 @@ def plot_bids(history, auction):
     # Smoothed line
     smoothed_line = chart.mark_line(color="black").encode(x="Round:Q", y="EWMA:Q", color="Bidder:N")
 
-    chart = smoothed_line + noisy_line
+    # Add the reserve price as a vertical line
+    df_reserve = pd.DataFrame({"alpha": [auction.alpha], "Reserve": ["Reserve Price"]})
+    reserve_line = (
+        alt.Chart(df_reserve)
+        .mark_rule(
+            strokeDash=[5, 5],
+            strokeWidth=2.5,
+        )
+        .encode(y="alpha:Q", color="Reserve:N")
+    )
 
-    chart = chart.encode(y=alt.Y("Bid:Q", axis=alt.Axis(title="Bid")))  # y axis label
+    chart = smoothed_line + noisy_line + reserve_line
+    # y axis label
+    chart = chart.encode(y=alt.Y("Bid:Q", axis=alt.Axis(title="Bid")))
     return chart
 
 
@@ -52,12 +63,28 @@ def plot_weights(auction):
         .mark_area(opacity=0.5)
         .encode(
             x="index:Q",
-            # y="Weight:Q",
             y=alt.Y("Weight:Q").stack(None),
             color="Agent:N",
         )
         .properties(title="Agent Weights")
     )
+
+    # Add the reserve price as a horizontal line
+    df_reserve = pd.DataFrame({"alpha": [auction.alpha], "Reserve": ["Reserve Price"]})
+    reserve_line = (
+        alt.Chart(df_reserve)
+        .mark_rule(
+            strokeDash=[5, 5],
+            strokeWidth=2.5,
+        )
+        .encode(x="alpha:Q", color="Reserve:N")
+    )
+
+    chart = chart + reserve_line
+
+    # x axis label
+    chart = chart.encode(x=alt.X("index:Q", axis=alt.Axis(title="Bid")))
+
     return chart
 
 
