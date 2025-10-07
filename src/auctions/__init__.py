@@ -93,28 +93,28 @@ class Auction:
 
         # Add seller bid if seller exists
         seller_bid = None
-        if self.seller is not None:
+        if self.seller:
             seller_bid = self.seller.bid()
 
         # Update buyer weights
         for i, a in enumerate(self.bidders):
-            opponent_bids = [v for j, v in buyer_bids.items() if j != i]
+            opponent_bids = [bid for j, bid in buyer_bids.items() if j != i]
 
             # If seller exists, add seller bid n times to opponent bids
-            if self.seller is not None and seller_bid is not None:
+            if self.seller and seller_bid:
                 opponent_bids.extend([seller_bid] * self.n)
 
             a.update_weights(np.array(opponent_bids))
 
         # Update seller weights separately (only with buyer bids)
-        if self.seller is not None:
+        if self.seller:
             buyer_bids_list = [v for v in buyer_bids.values()]
             self.seller.update_weights(np.array(buyer_bids_list))
 
         # Return all bids using flexible typing
         all_bids: Dict[Any, float] = {}
         all_bids.update(buyer_bids)
-        if self.seller is not None and seller_bid is not None:
+        if self.seller and seller_bid:
             all_bids["seller"] = seller_bid
 
         return all_bids

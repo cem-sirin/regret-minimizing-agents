@@ -9,7 +9,7 @@ cost: cost per item for the seller
 
 from dataclasses import dataclass
 import numpy as np
-from .base import BaseAgent, BaseAgentConfig, AuctionType
+from .base import BaseAgent, BaseAgentConfig
 
 
 @dataclass

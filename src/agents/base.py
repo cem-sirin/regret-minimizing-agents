@@ -48,7 +48,7 @@ class BaseAgent(ABC):
         # bids: corresponding bids for each action
         # weights: weights of each action
         self.bids = np.arange(
-            config.alpha, self.v.max() + config.eps, config.eps, dtype=np.float32
+            config.alpha, 1.0 + config.eps, config.eps, dtype=np.float32
         )
         self.bids = self.bids.round(int(np.log10(1 / config.eps)))
         self.N = len(self.bids)
