@@ -5,7 +5,9 @@ import pandas as pd
 
 def plot_bids(history, auction):
     df = pd.DataFrame(history)
-    df.columns = [f"Agents {i+1} v={a.v.max()}" for i, a in enumerate(auction.bidders)]
+    df.columns = [
+        f"Agents {i + 1} v={a.v.max()}" for i, a in enumerate(auction.bidders)
+    ]
 
     # Plot time series of bids using Altair
     # The columns should be "Agents", "Bid", and "Round"
@@ -13,16 +15,22 @@ def plot_bids(history, auction):
     df_long = df.melt(var_name="Agents", value_name="Bid", id_vars=["Round"])
 
     # Calculate EWMA
-    df_long["EWMA"] = df_long.groupby("Agents")["Bid"].transform(lambda x: x.ewm(span=50).mean())
+    df_long["EWMA"] = df_long.groupby("Agents")["Bid"].transform(
+        lambda x: x.ewm(span=50).mean()
+    )
 
     # Create Altair chart with smoothed line and low opacity for noisy data
     chart = alt.Chart(df_long).properties(title="Bid Simulation")
 
     # Noisy data
-    noisy_line = chart.mark_line(opacity=0.2).encode(x="Round:Q", y="Bid:Q", color="Agents:N")
+    noisy_line = chart.mark_line(opacity=0.2).encode(
+        x="Round:Q", y="Bid:Q", color="Agents:N"
+    )
 
     # Smoothed line
-    smoothed_line = chart.mark_line(color="black").encode(x="Round:Q", y="EWMA:Q", color="Agents:N")
+    smoothed_line = chart.mark_line(color="black").encode(
+        x="Round:Q", y="EWMA:Q", color="Agents:N"
+    )
 
     # Add the reserve price as a vertical line
     df_reserve = pd.DataFrame({"alpha": [auction.alpha], "Agents": ["Reserve Price"]})
@@ -90,8 +98,15 @@ def plot_weights(auction):
 
 if __name__ == "__main__":
     # Example usage (replace with your actual Auction and simulation)
-    from agents import Auction
+    from src.auctions import Auction
 
-    auction = Auction(type="spa", n=3, v_list=[0.5, 0.6, 0.7, 1.0], k=2, alpha=0.1, agent_args={"eps": 1e-3})
+    auction = Auction(
+        auction_type="spa",
+        n=3,
+        v_list=[0.5, 0.6, 0.7, 1.0],
+        k=2,
+        alpha=0.1,
+        agent_args={"eps": 1e-3},
+    )
     history = auction.simulate(T=1001)
-    plot_bids(history)
+    plot_bids(history, auction)

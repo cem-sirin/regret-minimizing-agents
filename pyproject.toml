@@ -1,0 +1,17 @@
+[project]
+name = "regret-minimizing-agents"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.3.3",
+    "pandas>=2.3.3",
+    "rich>=14.1.0",
+    "streamlit>=1.50.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.13.3",
+]
