@@ -4,38 +4,56 @@ _________
 oponent_bids: list of bids from other buyer agents (i.e., excluding itself)
 """
 
+from dataclasses import dataclass
 import numpy as np
-from .base import BaseAgent, AuctionType
+from .base import BaseAgent, BaseAgentConfig
+
+
+@dataclass
+class BuyerAgentConfig(BaseAgentConfig):
+    tau: float = 1.0  # overbidding factor
+    lam: float = 1  # hybrid objective function parameter
+    single_value: bool = True
 
 
 class BuyerAgent(BaseAgent):
-    def __init__(
-        self,
-        v: np.ndarray,
-        k: int = 1,
-        tau: float = 1.0,
-        lam: float = 1,
-        eps: float = 1e-3,
-        eta: float = 1e-1,
-        auction_type: AuctionType = AuctionType.SPA,
-        alpha: float = 0,
-        single_value: bool = True,
-    ):
+    def __init__(self, config: BuyerAgentConfig):
         """Agent class that can bid and update its weights according to Multiplicative Weights (MW) Algorithm.
 
         Args:
-            v: value that the agent has for the item.
-            k: number of items in the auction.
-            tau: overbidding factor.
-            lam: hybrid objective function parameter.
-            eps: granularity of the bids.
-            eta: learning rate of the MW algorithm.
-            auction_type: type of the auction. Either "fpa" or "spa", i.e., first and second price auction.
-            alpha: reserve price of the auction.
-            single_value: whether the agent has a single value for multiple-item auctions.
+            config: BuyerAgentConfig containing all agent parameters.
         """
-        super().__init__(v, k, tau, eps, eta, auction_type, alpha, single_value)
-        self.lam = lam
+        # Handle single_value logic before creating base config
+        if len(config.v) == 1 and config.single_value and config.k > 1:
+            v = np.array([config.v[0]] * config.k)
+        else:
+            v = config.v
+
+        # Create base config with processed v
+        base_config = BaseAgentConfig(
+            v=v,
+            k=config.k,
+            eps=config.eps,
+            eta=config.eta,
+            auction_type=config.auction_type,
+            alpha=config.alpha,
+        )
+
+        super().__init__(base_config)
+        self.config = config
+        self.tau = config.tau
+        self.lam = config.lam
+
+        # Recalculate bids with tau factor
+        self.bids = np.arange(
+            config.alpha,
+            self.v.max() * config.tau + config.eps,
+            config.eps,
+            dtype=np.float32,
+        )
+        self.bids = self.bids.round(int(np.log10(1 / config.eps)))
+        self.N = len(self.bids)
+        self.weights = np.ones(self.N) / self.N
 
     def allocate(self, other_bids: np.ndarray) -> np.ndarray:
         """Allocation function. Returns the corresponding outcome, i.e., which item was won (or no item)"""
@@ -78,4 +96,4 @@ class BuyerAgent(BaseAgent):
         self.weights /= np.sum(self.weights)
 
     def __repr__(self) -> str:
-        return f"Agent(v={self.v}, eps={self.eps}, eta={self.eta}, type={self.auction_type}, alpha={self.alpha})"
+        return f"BuyerAgent(v={self.config.v}, eps={self.config.eps}, eta={self.config.eta}, type={self.config.auction_type}, alpha={self.config.alpha}, tau={self.config.tau}, lam={self.config.lam})"

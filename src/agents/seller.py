@@ -7,24 +7,21 @@ other_bids: list of bids from buyer agents
 cost: cost per item for the seller
 """
 
+from dataclasses import dataclass
 import numpy as np
-from .base import BaseAgent, AuctionType
+from .base import BaseAgent, BaseAgentConfig, AuctionType
+
+
+@dataclass
+class SellerAgentConfig(BaseAgentConfig):
+    cost: float = 0.0  # cost per item for the seller
 
 
 class SellerAgent(BaseAgent):
-    def __init__(
-        self,
-        v: np.ndarray,
-        k: int = 1,
-        eps: float = 1e-3,
-        eta: float = 1e-1,
-        auction_type: AuctionType = AuctionType.SPA,
-        alpha: float = 0,
-        single_value: bool = True,
-        cost: float = 0.0,
-    ):
-        super().__init__(v, k, 1.0, eps, eta, auction_type, alpha, single_value)
-        self.cost = cost  # Cost of each item for the seller
+    def __init__(self, config: SellerAgentConfig):
+        super().__init__(config)
+        self.config = config
+        self.cost = config.cost  # Cost of each item for the seller
 
     def allocate(self, other_bids: np.ndarray) -> np.ndarray:
         """Allocation function for the seller. Depending on the seller's reserve price bid, it determines how many items are sold.
@@ -65,22 +62,12 @@ class SellerAgent(BaseAgent):
         return u
 
     def update_weights(self, other_bids: np.ndarray):
-        print(f"Server Bids: {self.bids}")
-        print(f"Server Bids.shape: {self.bids.shape}")
-
         other_bids.sort()
         other_bids = np.insert(other_bids, 0, 0)
 
-        print(f"Buyer Bids: {other_bids}, len={len(other_bids)}")
         # Find the allocation and payments
         x = self.allocate(other_bids)
-
-        print(f"x: {x}")
-        print(f"x.shape: {x.shape}")
-
         p = self.payments(other_bids, x)
-        print(f"p: {p}")
-        print(f"p.shape: {p.shape}")
 
         # Calculate the objective function
         π = self.objective(x, p)
@@ -90,4 +77,4 @@ class SellerAgent(BaseAgent):
         self.weights /= np.sum(self.weights)
 
     def __repr__(self) -> str:
-        return f"SellerAgent(v={self.v}, eps={self.eps}, eta={self.eta}, type={self.auction_type}, alpha={self.alpha}, cost={self.cost})"
+        return f"SellerAgent(v={self.config.v}, eps={self.config.eps}, eta={self.config.eta}, type={self.config.auction_type}, alpha={self.config.alpha}, cost={self.config.cost})"

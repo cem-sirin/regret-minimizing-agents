@@ -5,9 +5,19 @@ import pandas as pd
 
 def plot_bids(history, auction):
     df = pd.DataFrame(history)
-    df.columns = [
-        f"Agents {i + 1} v={a.v.max()}" for i, a in enumerate(auction.bidders)
+
+    # Create column names for buyers
+    buyer_columns = [
+        f"Agent {i + 1} v={a.v.max()}" for i, a in enumerate(auction.bidders)
     ]
+
+    # Add seller column if seller exists
+    if auction.seller is not None:
+        all_columns = buyer_columns + ["Seller"]
+    else:
+        all_columns = buyer_columns
+
+    df.columns = all_columns
 
     # Plot time series of bids using Altair
     # The columns should be "Agents", "Bid", and "Round"
@@ -98,15 +108,17 @@ def plot_weights(auction):
 
 if __name__ == "__main__":
     # Example usage (replace with your actual Auction and simulation)
-    from src.auctions import Auction
+    from src.auctions import Auction, AuctionConfig
+    from src.agents.base import AuctionType
 
-    auction = Auction(
-        auction_type="spa",
+    auction_config = AuctionConfig(
+        auction_type=AuctionType.SPA,
         n=3,
-        v_list=[0.5, 0.6, 0.7, 1.0],
+        v_list=[0.5, 0.6, 0.7],
         k=2,
         alpha=0.1,
         agent_args={"eps": 1e-3},
     )
+    auction = Auction(auction_config)
     history = auction.simulate(T=1001)
     plot_bids(history, auction)
