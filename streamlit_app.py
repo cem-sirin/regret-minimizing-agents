@@ -51,7 +51,7 @@ def apply_preset(preset_name):
     if preset_name == "SPA with equal values":
         return {
             "auction_type": "Second Price Auction",
-            "num_agents": 3,
+            "num_agents": 2,
             "k": 1,
             "α": 0.1,
             "include_seller": False,
@@ -60,12 +60,12 @@ def apply_preset(preset_name):
             "eps": -3,
             "eta": -2,
             "T": 5000,
-            "v_list": [0.5, 0.5, 0.5],
+            "v_list": [0.5, 0.5],
         }
     elif preset_name == "SPA with seller":
         return {
             "auction_type": "Second Price Auction",
-            "num_agents": 3,
+            "num_agents": 2,
             "k": 1,
             "α": 0.1,
             "include_seller": True,
@@ -74,7 +74,7 @@ def apply_preset(preset_name):
             "eps": -3,
             "eta": -2,
             "T": 5000,
-            "v_list": [1.0, 0.5, 0.5],  # First agent has value 1
+            "v_list": [1.0, 0.5],  # First agent has value 1
             "seller_cost": 0.05,
         }
     else:
